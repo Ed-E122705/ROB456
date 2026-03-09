@@ -1,0 +1,53 @@
+# Adapted from:
+#   simple.world - basic world file example
+#   Authors: Richard Vaughan
+#
+# Bill Smart, smartw@oregonstate.edu
+
+
+include "include/pioneer.inc"
+include "include/map.inc"
+include "include/sick.inc"
+include "include/box.inc"
+
+# spatial resolution of the underlying occupancy grid. Default is 0.02m.
+resolution 0.02
+
+# set the multiple of real time that Stage should try to achieve. Default is 1. 
+# set to 0 to go as fast as possible.
+speedup 1.000
+
+# configure the GUI window
+window
+(
+  size [ 635 666 ] # in pixels
+  scale 36.995   # pixels per meter
+  center [ 0.355  -0.189 ]
+  rotate [ 3.500  0.000 ]
+        
+  show_data 1              # 1=on 0=off
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "simple_rooms"
+  size [16.000 16.000 0.800]
+  pose [0.000 0.000 0.000 0.000]
+  bitmap "bitmaps/simple_rooms.png"
+)
+
+
+pioneer2dx_base_no_sonar
+(     
+  # can refer to the robot by this name
+  name "robot"
+  pose [ -6.146 -5.438 0.000 87.845 ] 
+
+  sicklaser( pose [ 0.000 0.000 0.000 0.000 ] ) 
+ 
+  trail_length 400
+)
+
+box(name "box1" pose [ 5.000 -5.000 0.000 0.000 ])
+box(name "box2" pose [ -5.000 4.000 0.000 0.000 ])
