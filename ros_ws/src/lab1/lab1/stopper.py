@@ -53,6 +53,7 @@ class MyStopper(Node):
 		angle_min = scan.angle_min
 		angle_max = scan.angle_max
 		num_readings = len(scan.ranges)
+		theta_array = np.linspace(angle_min, angle_max, num_readings)
 
 		# GUIDE
 		# Use angle min, max, and number of readings to calculate the theta value for each scan
@@ -84,15 +85,23 @@ class MyStopper(Node):
 
 		shortest = 0
 		max_speed = 0.2
+		ranges = []
+		for i in range(0, num_readings):
+		    y = scan.ranges[i] * np.sin(theta_array[i])
+		    if abs(y) <= 0.19:
+		        ranges.append(scan.ranges[i])
+		shortest = np.min(ranges)
+		if shortest <= 1.0:
+		    t.twist.linear.x = 0.0
+		else:
+		    t.twist.linear.x = max_speed * np.tanh(shortest - 1.0)
   # YOUR CODE HERE
-
+  
 		# Send the command to the robot.
 		self.pub.publish(t)
 
 		# Print out a log message to the INFO channel to let us know it's working.
 		self.get_logger().info(f'Shortest {shortest}, speed {t.twist.linear.x}')
-
-
 
 # The idiom in ROS2 is to use a function to do all of the setup and work.  This
 # function is referenced in the setup.py file as the entry point of the node when

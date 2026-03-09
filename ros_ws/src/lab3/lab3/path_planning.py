@@ -194,20 +194,68 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         #    Now do the instructions from the slide (the actual algorithm)
         #  See also lecture slides
         # YOUR CODE HERE
+        if current_node_ij == goal_loc:
+            break
+
+        if visited_closed_yn:
+            continue
+
+        visited[current_node_ij] = (visited_distance, visited_parent, True)
+
+        for adj_node in eight_connected(current_node_ij):
+            if not is_free(im, adj_node):
+                continue
+
+            # Calculate the distance to the adjacent node
+            dx = adj_node[0] - current_node_ij[0]
+            dy = adj_node[1] - current_node_ij[1]
+            weight = np.sqrt(dx**2 + dy**2)
+            distance_to_adj_node = distance_to_current_node + weight
+
+            if adj_node not in visited:
+                visited[adj_node] = (distance_to_adj_node, current_node_ij, False)
+                heapq.heappush(priority_queue, (distance_to_adj_node, adj_node))
+            
 
     # Now check that we actually found the goal node
     if not goal_loc in visited:
-        print(f"Goal {goal_loc} not reached, taking closest")
+        #print(f"Goal {goal_loc} not reached, taking closest")
 
         # GUIDE: Deal with not being able to get to the goal loc
         #   If the goal location is not reachable, find the node closest to the goal 
         #.  and return the path to it - you'll want this for the ROS 2 assignment
         # YOUR CODE HERE
+        closest_node = None
+
+        for node in visited:
+            if closest_node is None:
+                closest_node = node
+                continue
+
+            # Calculate the weight from node to goal_loc
+            dx = node[0] - goal_loc[0]
+            dy = node[1] - goal_loc[1]
+            weight = np.sqrt(dx**2 + dy**2)
+
+            dx_closest = closest_node[0] - goal_loc[0]
+            dy_closest = closest_node[1] - goal_loc[1]
+            closest_weight = np.sqrt(dx_closest**2 + dy_closest**2)
+
+            if weight < closest_weight:
+                closest_node = node
+        
+        goal_loc = closest_node                
 
     path = []
     path.append(goal_loc)
     # GUIDE: Build the path by starting at the goal node and working backwards
     # YOUR CODE HERE
+    while visited[goal_loc][1] is not None:
+        parent = visited[goal_loc][1]
+        path.append(parent)
+        goal_loc = parent
+
+    path.reverse()
 
     return path
 
@@ -228,7 +276,7 @@ def open_image(im_name):
               "Assignments/Data/" + im_name, 
               "Skills/Data/" + im_name,
               "../../../../Skills/Data/" + im_name,
-              "../../../../Assignments/Data" + im_name,
+              "../../../../Assignments/Data/" + im_name,
               ]
     im = None
     print(f"{os.getcwd()}")
