@@ -136,6 +136,10 @@ def eight_connected(pix=(0, 0)):
             yield ret
 
 
+def euclidean_heuristic(node, goal):    # heuristic for A*
+    func = np.sqrt((node[0] - goal[0])**2 + (node[1] - goal[1])**2)   # Euclidean heuristic function
+    return func
+
 def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
     """ Occupancy grid image, with robot and goal loc as pixels
     @param im - the thresholded image - use is_free(i, j) to determine if in reachable node
@@ -196,66 +200,61 @@ def dijkstra(im, robot_loc=(0, 0), goal_loc=(0, 0)):
         # YOUR CODE HERE
         if current_node_ij == goal_loc:
             break
-
-        if visited_closed_yn:
+        elif visited[current_node_ij][2] == True:
             continue
+        else:
+            visited[current_node_ij] = (visited_distance, visited_parent, True) # update visited to True
+           
+            # loop over the neighbors
+            for adj_node in eight_connected(current_node_ij):
+                if not is_free(im, adj_node):
+                    continue
+                else:
+                    distance = visited_distance + np.sqrt((adj_node[0] - current_node_ij[0])**2 + (adj_node[1] - current_node_ij[1])**2)
+                    if adj_node not in visited:     # if have not seen neighbor before
+                        heapq.heappush(priority_queue, (distance, adj_node))
+                        visited[adj_node] = (distance, current_node_ij, False)
+                    else:
+                        if distance < visited[adj_node][0] and visited[adj_node][2] == False:   # if this distance to neighbor is shorter than previous distance to neighbor
+                            func = euclidean_heuristic(adj_node, goal_loc) + visited_distance   # A* piece
+                            heapq.heappush(priority_queue, (func, adj_node))     # push (distance, coords) to queue
+                            visited[adj_node] = (distance, current_node_ij, False)
+                        else:       # if not shorter distance, ignore
+                            continue
 
-        visited[current_node_ij] = (visited_distance, visited_parent, True)
-
-        for adj_node in eight_connected(current_node_ij):
-            if not is_free(im, adj_node):
-                continue
-
-            # Calculate the distance to the adjacent node
-            dx = adj_node[0] - current_node_ij[0]
-            dy = adj_node[1] - current_node_ij[1]
-            weight = np.sqrt(dx**2 + dy**2)
-            distance_to_adj_node = distance_to_current_node + weight
-
-            if adj_node not in visited:
-                visited[adj_node] = (distance_to_adj_node, current_node_ij, False)
-                heapq.heappush(priority_queue, (distance_to_adj_node, adj_node))
-            
 
     # Now check that we actually found the goal node
     if not goal_loc in visited:
-        #print(f"Goal {goal_loc} not reached, taking closest")
+        # print(f"Goal {goal_loc} not reached, taking closest")
 
-        # GUIDE: Deal with not being able to get to the goal loc
-        #   If the goal location is not reachable, find the node closest to the goal 
-        #.  and return the path to it - you'll want this for the ROS 2 assignment
-        # YOUR CODE HERE
-        closest_node = None
+    # GUIDE: Deal with not being able to get to the goal loc
+    # If the goal location is not reachable, find the node closest to the goal
+    #. and return the path to it - you'll want this for the ROS 2 assignment
+    # YOUR CODE HERE
+        shortest_dist = np.inf  # set to largest number possible
+        best_loc = None
+        for loc in visited.keys():
+            dist = np.sqrt((loc[0] - goal_loc[0])**2 + (loc[1] - goal_loc[1])**2)
 
-        for node in visited:
-            if closest_node is None:
-                closest_node = node
-                continue
-
-            # Calculate the weight from node to goal_loc
-            dx = node[0] - goal_loc[0]
-            dy = node[1] - goal_loc[1]
-            weight = np.sqrt(dx**2 + dy**2)
-
-            dx_closest = closest_node[0] - goal_loc[0]
-            dy_closest = closest_node[1] - goal_loc[1]
-            closest_weight = np.sqrt(dx_closest**2 + dy_closest**2)
-
-            if weight < closest_weight:
-                closest_node = node
-        
-        goal_loc = closest_node                
+            if dist < shortest_dist:
+                shortest_dist = dist
+                best_loc = loc
+        goal_loc = best_loc  # gets index 1 of last value in dictionary
 
     path = []
     path.append(goal_loc)
     # GUIDE: Build the path by starting at the goal node and working backwards
     # YOUR CODE HERE
-    while visited[goal_loc][1] is not None:
-        parent = visited[goal_loc][1]
-        path.append(parent)
-        goal_loc = parent
 
-    path.reverse()
+    # work through tree of parents to end
+    current_point = visited[goal_loc][1] # parent of goal
+    while True:
+        path.append(current_point)
+        parent = visited[current_point][1]
+        current_point = parent
+
+        if parent == None:
+            break
 
     return path
 
