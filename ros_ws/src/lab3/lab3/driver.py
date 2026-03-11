@@ -101,7 +101,9 @@ class Lab3Driver(Node):
 		self.target.point.y = 0.0
 
 		# GUIDE: Declare any variables here
-  # YOUR CODE HERE
+		# Track the closest distance we've achieved to the current goal.
+		# Used to detect if we're making progress or oscillating.
+		self.best_distance_so_far = float('inf')
 
 		# Timer to make sure we publish the target marker (once we get a goal)
 		self.marker_timer = self.create_timer(1.0, self._marker_callback)
@@ -197,7 +199,19 @@ class Lab3Driver(Node):
 
   # YOUR CODE HERE
 		target_distance = self.distance_to_target()
-		return target_distance < self.threshold
+
+		# Track the closest we've gotten to this goal — useful for stuck detection
+		if target_distance < self.best_distance_so_far:
+			self.best_distance_so_far = target_distance
+
+		# Check if we're within the acceptable threshold
+		if target_distance < self.threshold:
+			self.get_logger().info(
+				f"Close enough! Distance {target_distance:.3f}m < threshold {self.threshold:.3f}m"
+			)
+			return True
+
+		return False
 
 	def distance_to_target(self):
 		""" Communicate with send points - set to distance to target"""
@@ -219,6 +233,9 @@ class Lab3Driver(Node):
 		# Build a result to send back
 		result = NavTarget.Result()
 		result.success = False
+
+		# Reset tracking for the new goal
+		self.best_distance_so_far = float('inf')
 
 		# Reset target
 		self.set_target()
@@ -461,4 +478,3 @@ if __name__ == '__main__':
 	# The idiom in ROS2 is to set up a main() function and to call it from the entry
 	# point of the script.
 	main()
-
