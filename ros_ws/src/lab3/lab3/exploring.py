@@ -129,6 +129,29 @@ def find_waypoints(im, path):
     # Again, no right answer here
     # YOUR CODE HERE
 
+    waypoints = []              # blank array to store the new path
+    waypoints.append(path(1))   # add the first point
+
+    # Check if each point is in a straight line from the previous stored point
+    # If it is not, store the unique point
+    # If it is, don't store it
+    for i in range(1, len(path)):
+        x_close, y_close = np.isclose(waypoints[-1], path[i]) # Are coordinates close 
+
+        if x_close == False and y_close == True:  # Check if points are along a vertical line
+            pass
+        elif x_close == True and y_close == False:  # Check if points are along a horizontal line
+            pass
+        else:
+            angle_curent = np.atan2(path[i](1), path[i](0))
+            angle_old = np.atan2(waypoints[-1](1), waypoints[-1](0))
+            if np.isclose(angle_curent == angle_old):   # Check if points are along a diagonal line
+                pass
+            else:
+                waypoints.append(path(i))
+
+    return waypoints
+
 
 def test_unseen(im, pts):
     for pt in pts:
