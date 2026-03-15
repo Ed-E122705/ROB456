@@ -195,7 +195,6 @@ def find_waypoints(im, path):
         else:
             continue
     waypoints.append(path[-1]) # include goal
-    print(waypoints)
     return waypoints
     
 
