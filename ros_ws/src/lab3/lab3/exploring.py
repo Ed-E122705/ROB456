@@ -81,6 +81,8 @@ def convert_x_y_to_pix(im_size, x_y, size_pix):
     @param x_y - tuple with x,y in meters
     @param size_pix - size of pixel in meters
     @return i, j (integers) """
+    # for i in range(0, 2):
+    #     print(f"x_y: {x_y}, x_y[i]: {x_y[i]}, im_size: {im_size}, im_size[1-i]: {im_size[1-i]}")
     pix = [int(x_y[i] * im_size[1-i] / size_pix) for i in range(0, 2)]
 
     if not (0 <= pix[0] <= im_size[1]) or not (0 <= pix[1] <= im_size[0]):
@@ -98,6 +100,19 @@ def is_reachable(im, pix):
     #  False otherwise
     # You can use four or eight connected - eight will return more points
     # YOUR CODE HERE
+    ############# maybe modify to return how many neighbors are free instead of T/F
+    # neighbors = path_planning.eight_connected(pix)  # get neighbors of the pixel
+    # print(neighbors)
+    if not path_planning.is_wall(im, pix):
+        print(f"pix: {pix}")
+        for adj in path_planning.eight_connected(pix):  # loop through neighbors
+            if 0 <= adj[0] < im.shape[1] and 0 <= adj[1] < im.shape[0]:
+                print(f"adj: {adj}")
+                # neighbor_x, neighbor_y = convert_pix_to_x_y(im.shape, adj, 1)
+                if path_planning.is_free(im, adj):  # if there is a free neighbor
+                # if im[neighbor_x][neighbor_y] == 255:     # If there is a known free pixel
+                    return True
+        return False
     return False
 
 
@@ -109,7 +124,21 @@ def find_all_possible_goals(im):
     @return list of possible pixel (x,y) locations"""
 
     # YOUR CODE HERE
+    # Note: im is in (y, x) coordinates
 
+    free_pixles = []    # probably turn into dic to store # of unseen neighbors for culling 
+    for i, row in enumerate(im):        # change to np.logical_and/np.logical_or
+        for j, v in enumerate(row):
+            # pix = convert_x_y_to_pix((im.shape[1], im.shape[0]), (i, j), 0.1)
+            if path_planning.is_unseen(im, (j, i)):    # (im.shape[1], im.shape[0]) = im width, im height
+                
+                if is_reachable(im, (j, i)):
+                    free_pixles.append((j, i))
+    
+    # add code to cull here
+
+    return free_pixles
+        
 
 def find_best_point(im, possible_points : list, robot_loc):
     """ Pick one of the unseen points to go to
@@ -118,6 +147,8 @@ def find_best_point(im, possible_points : list, robot_loc):
     @param robot_loc - location of the robot (in case you want to factor that in)
     """
     # YOUR CODE HERE
+
+    # loop through possible_points, somehow compare distance from robot, set closest as goal
 
 
 def find_waypoints(im, path):
