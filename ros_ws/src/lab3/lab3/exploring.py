@@ -103,17 +103,16 @@ def is_reachable(im, pix):
     ############# maybe modify to return how many neighbors are free instead of T/F
     # neighbors = path_planning.eight_connected(pix)  # get neighbors of the pixel
     # print(neighbors)
+    unseen_neighbor_count = 0
+    free_neighbor_T_F = False
     if not path_planning.is_wall(im, pix):
-        print(f"pix: {pix}")
         for adj in path_planning.eight_connected(pix):  # loop through neighbors
-            if 0 <= adj[0] < im.shape[1] and 0 <= adj[1] < im.shape[0]:
-                print(f"adj: {adj}")
-                # neighbor_x, neighbor_y = convert_pix_to_x_y(im.shape, adj, 1)
+            if 0 <= adj[0] < im.shape[1] and 0 <= adj[1] < im.shape[0]:     # limit to points in the image
                 if path_planning.is_free(im, adj):  # if there is a free neighbor
-                # if im[neighbor_x][neighbor_y] == 255:     # If there is a known free pixel
-                    return True
-        return False
-    return False
+                    free_neighbor_T_F = True
+                elif path_planning.is_unseen(im, adj):  # see how many neighbors are unseen 
+                    unseen_neighbor_count += 1
+    return free_neighbor_T_F, unseen_neighbor_count
 
 
 def find_all_possible_goals(im):
@@ -126,16 +125,13 @@ def find_all_possible_goals(im):
     # YOUR CODE HERE
     # Note: im is in (y, x) coordinates
 
-    free_pixles = []    # probably turn into dic to store # of unseen neighbors for culling 
+    free_pixles = []
     for i, row in enumerate(im):        # change to np.logical_and/np.logical_or
         for j, v in enumerate(row):
-            # pix = convert_x_y_to_pix((im.shape[1], im.shape[0]), (i, j), 0.1)
-            if path_planning.is_unseen(im, (j, i)):    # (im.shape[1], im.shape[0]) = im width, im height
-                
-                if is_reachable(im, (j, i)):
-                    free_pixles.append((j, i))
-    
-    # add code to cull here
+            if path_planning.is_unseen(im, (j, i)):
+                reachable, unseen_neighbors = is_reachable(im, (j, i))
+                if reachable and unseen_neighbors >= 3:    # cull to points with 3 or more unseen neighbors (deal with noise)
+                    free_pixles.update((j, i))
 
     return free_pixles
         
@@ -149,6 +145,10 @@ def find_best_point(im, possible_points : list, robot_loc):
     # YOUR CODE HERE
 
     # loop through possible_points, somehow compare distance from robot, set closest as goal
+    current_best_option = None  # Store current best option, update when a better one is found
+    for i in possible_points:
+        continue
+    return current_best_option
 
 
 def find_waypoints(im, path):
