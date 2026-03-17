@@ -42,7 +42,7 @@ pioneer2dx_base_no_sonar
 (     
   # can refer to the robot by this name
   name "robot"
-  pose [ -6.146 -5.438 0.000 87.845 ] 
+  pose [ -4.119 -6.007 0.000 87.845 ] 
 
   sicklaser( pose [ 0.000 0.000 0.000 0.000 ] ) 
  

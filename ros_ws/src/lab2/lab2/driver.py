@@ -101,6 +101,7 @@ class Lab3Driver(Node):
 		self.target.point.y = 0.0
 
 		# GUIDE: Declare any variables here
+		self.best_distance_so_far = float('inf')
   # YOUR CODE HERE
 
 		# Timer to make sure we publish the target marker (once we get a goal)
@@ -196,8 +197,22 @@ class Lab3Driver(Node):
 		@ return true/false """
 
   # YOUR CODE HERE
+		# target_distance = self.distance_to_target()
+		# return target_distance < self.threshold
 		target_distance = self.distance_to_target()
-		return target_distance < self.threshold
+
+		# Track the closest we've gotten to this goal — useful for stuck detection
+		if target_distance < self.best_distance_so_far:
+			self.best_distance_so_far = target_distance
+
+		# Check if we're within the acceptable threshold
+		if target_distance < self.threshold:
+			self.get_logger().info(
+				f"Close enough! Distance {target_distance:.3f}m < threshold {self.threshold:.3f}m"
+			)
+			return True
+
+		return False
 
 	def distance_to_target(self):
 		""" Communicate with send points - set to distance to target"""
@@ -219,6 +234,9 @@ class Lab3Driver(Node):
 		# Build a result to send back
 		result = NavTarget.Result()
 		result.success = False
+
+		# Reset tracking for the new goal
+		self.best_distance_so_far = float('inf')
 
 		# Reset target
 		self.set_target()
@@ -361,17 +379,21 @@ class Lab3Driver(Node):
 		left_shortest = np.min(left) if left else float("inf")
 		right_shortest = np.min(right) if right else float("inf")
 		
-		if front_shortest < self.threshold + 0.3:
+		closest_obstacle = min(front_shortest, left_shortest, right_shortest)
+		avoid_speed = 0.2 * np.tanh(closest_obstacle)
+		avoid_speed = max(0.05, avoid_speed)
+				
+		if front_shortest < self.threshold + 0.45:
 			if left_shortest > right_shortest:
-				return True, 0.0, -np.pi/2
+				return True, avoid_speed, -np.pi/24
 			else:
-				return True, 0.0, np.pi/2
+				return True, avoid_speed, np.pi/24
 		
-		if left_shortest < self.threshold + 0.3:
-			return True, 0.0, np.pi/8
+		if left_shortest < self.threshold + 0.45:
+			return True, avoid_speed, np.pi/24
 
-		if right_shortest < self.threshold + 0.3:
-			return True, 0.0, -np.pi/8
+		if right_shortest < self.threshold + 0.45:
+			return True, avoid_speed, -np.pi/24
 		
 		return False, 0.0, 0.0
 

@@ -378,17 +378,21 @@ class Lab3Driver(Node):
 		left_shortest = np.min(left) if left else float("inf")
 		right_shortest = np.min(right) if right else float("inf")
 		
-		if front_shortest < self.threshold + 0.3:
+		closest_obstacle = min(front_shortest, left_shortest, right_shortest)
+		avoid_speed = 0.2 * np.tanh(closest_obstacle)
+		avoid_speed = max(0.05, avoid_speed)
+				
+		if front_shortest < self.threshold + 0.45:
 			if left_shortest > right_shortest:
-				return True, 0.0, -np.pi/2
+				return True, avoid_speed, -np.pi/24
 			else:
-				return True, 0.0, np.pi/2
+				return True, avoid_speed, np.pi/24
 		
-		if left_shortest < self.threshold + 0.3:
-			return True, 0.0, np.pi/8
+		if left_shortest < self.threshold + 0.45:
+			return True, avoid_speed, np.pi/24
 
-		if right_shortest < self.threshold + 0.3:
-			return True, 0.0, -np.pi/8
+		if right_shortest < self.threshold + 0.45:
+			return True, avoid_speed, -np.pi/24
 		
 		return False, 0.0, 0.0
 
