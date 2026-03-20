@@ -399,8 +399,8 @@ class SendPoints(Node):
 		@return pt_uv - point in the image"""
 		info = map_msg.info
 
-		im_u = 0
-		im_v = 0
+		im_u = int((pt_xy[0] - info.origin.position.x) / info.resolution)
+		im_v = int((pt_xy[1] - info.origin.position.y) / info.resolution)
 
 		# GUIDE: Subtract the origin position of the map and then divide by the resolution
 		#   Don't forget to cast to an int
@@ -416,8 +416,9 @@ class SendPoints(Node):
 		@return pt_xy - point in the world"""
 		info = map_msg.info
 
-		pt_x = 0.0
-		pt_y = 0.0
+		pt_x = int((pt_uv[0] * info.resolution) / info.origin.position.x)
+		pt_y = int((pt_uv[1] * info.resolution) / info.origin.position.y)
+
 		# GUIDE: Multiply by the resolution then add the origin position of the map 
   # YOUR CODE HERE
 		# self.get_logger().info(f"before {pt_uv} after {pt_x}, {pt_y}")
@@ -452,29 +453,15 @@ class SendPoints(Node):
 
 		# GUIDE: Change this to get just the points you might consider looking at and perhaps don't do it every time a map is made
 		# Perhaps it doesn't recompute every time a map is made???? 
+		reachable_pts = []
 		if not self.goal_points or self.completed_all_goals():
-		# Below is the original code for this method which is commented out
-		
-			all_unseen_pts = find_all_possible_goals(im_thresh)  # Your exploring code
-			reachable_pts = []
-		
-		# for p in all_unseen_pts:
-		# 	map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
-		# 	reachable_pts.append(map_xy)
-		
-		# List of neighbors
-			neighbors = []
-		# Find best point
+			all_unseen_pts = find_all_possible_goals(im_thresh)
 			best_point = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
-		
-		# Check neighbors and add them if they're free
-		for i in eight_connected(best_point):
-			if is_free(im_thresh, i):
-				neighbors.append(i)
-		
-		for points in neighbors:
-			map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=points)
-			reachable_pts.append(map_xy)
+			
+			for i in eight_connected(best_point):
+				if is_free(im_thresh, i):
+					map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv = i)
+					reachable_pts.append(map_xy)
 
 		# This puts markers in RViz for all unseen points
 		self._set_reachable_markers(reachable_pts)
