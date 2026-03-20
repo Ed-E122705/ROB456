@@ -416,8 +416,8 @@ class SendPoints(Node):
 		@return pt_xy - point in the world"""
 		info = map_msg.info
 
-		pt_x = int((pt_uv[0] * info.resolution) / info.origin.position.x)
-		pt_y = int((pt_uv[1] * info.resolution) / info.origin.position.y)
+		pt_x = (pt_uv[0] * info.resolution) + info.origin.position.x
+		pt_y = (pt_uv[1] * info.resolution) + info.origin.position.y
 
 		# GUIDE: Multiply by the resolution then add the origin position of the map 
   # YOUR CODE HERE
@@ -444,19 +444,20 @@ class SendPoints(Node):
 
 		self.get_logger().info(f"N free {np.count_nonzero(im_thresh == 255)}, N walls {np.count_nonzero(im_thresh == 0)}, N {np.count_nonzero(im_thresh == 128)}")
 
-
 		# Location of robot
 		transform = self.tf_buffer.lookup_transform('odom', 'base_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=1.0))
 		robot_current_loc_in_map = (transform.transform.translation.x, transform.transform.translation.y)
 		robot_current_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=robot_current_loc_in_map)
 		self.get_logger().info(f"Robot current location {robot_current_loc_in_map}")
 
-		# GUIDE: Change this to get just the points you might consider looking at and perhaps don't do it every time a map is made
-		# Perhaps it doesn't recompute every time a map is made???? 
-		reachable_pts = []
-		if not self.goal_points or self.completed_all_goals():
+		if not self.goal_points:
+			self.get_logger().info("Creating New Goals...")
 			all_unseen_pts = find_all_possible_goals(im_thresh)
-			best_point = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
+			
+			if not all_unseen_pts:
+				self.get_logger().info("Map fully explored!")
+				return
+			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
 			
 			for i in eight_connected(best_point):
 				if is_free(im_thresh, i):
@@ -464,31 +465,31 @@ class SendPoints(Node):
 					reachable_pts.append(map_xy)
 
 		# This puts markers in RViz for all unseen points
-			self._set_reachable_markers(reachable_pts)
+		self._set_reachable_markers(reachable_pts)
 
 		# GUIDE: This is currently set up to call path planning every iteration (which is probably not what you want)
 		#   If we're on the way to the current goal, path plan to the closest goal point that is reachable
 		#   If we're headed towards the last goal, get a goal from best_pt
 
 		# The final goal point in image coords
-			if len(self.goal_points) > 0:		
-				goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=self.goal_points[-1])
-			else:
-				goal_loc_in_image = (map_msg.info.width // 2, map_msg.info.height // 2)
+		if len(self.goal_points) > 0:		
+			goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=self.goal_points[-1])
+		else:
+			goal_loc_in_image = (map_msg.info.width // 2, map_msg.info.height // 2)
 
-			if 0 < goal_loc_in_image[0] < map_msg.info.width and 0 < goal_loc_in_image[1] < map_msg.info.height:
+		if 0 < goal_loc_in_image[0] < map_msg.info.width and 0 < goal_loc_in_image[1] < map_msg.info.height:
 			# Headed towards last goal and it is now in the free space of the robot
-				goal_loc_in_image = find_best_point(im, all_unseen_pts, robot_current_loc_in_image)  # Use your exploring code to find a good point
-				self.get_logger().info(f"Getting best {goal_loc_in_image} {is_free(im, goal_loc_in_image)}")
-			else:
+			goal_loc_in_image = find_best_point(im, all_unseen_pts, robot_current_loc_in_image)  # Use your exploring code to find a good point
+			self.get_logger().info(f"Getting best {goal_loc_in_image} {is_free(im, goal_loc_in_image)}")
+		else:
 			# This just looks for the last viable goal (that is free) - will grab a goal
 			#  that's already been seen
-				if self.goal_points:
-					for p in self.goal_points:
-						try_goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=p)
-						if try_goal_loc_in_image[0] < map_msg.info.width and try_goal_loc_in_image[1] < map_msg.info.height:
-							if is_free(im_thresh, try_goal_loc_in_image):
-								goal_loc_in_image = try_goal_loc_in_image
+			if self.goal_points:
+				for p in self.goal_points:
+					try_goal_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=p)
+					if try_goal_loc_in_image[0] < map_msg.info.width and try_goal_loc_in_image[1] < map_msg.info.height:
+						if is_free(im_thresh, try_goal_loc_in_image):
+							goal_loc_in_image = try_goal_loc_in_image
 
 		# GUIDE: This calls dijkstra with the goal location and plots the path that you return in RViz
 		#  Note: If you did not fix your code to deal with an unreachable point then this will handle that case
@@ -531,7 +532,7 @@ def main(args=None):
 	send_points = SendPoints(points)
 
 	# Multi-threaded execution
-	executor = MultiThreadedExecutor()
+	executor = MultiThreadedExecutor(num_threads = 2)
 	executor.add_node(send_points)
 	executor.spin()
 	#rclpy.spin(send_points)
