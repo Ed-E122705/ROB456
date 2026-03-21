@@ -451,16 +451,20 @@ class SendPoints(Node):
 		self.get_logger().info(f"Robot current location {robot_current_loc_in_map}")
 
 		# DOC: code edits made for map_callback
-		
+
+		# Check for if there are no goals
 		if not self.goal_points:
-			# No goals yet — create initial set
 			self.get_logger().info("Creating New Goals...")
+			
+			# Finding all unexplored points in the map
 			all_unseen_pts = find_all_possible_goals(im_thresh)
 			
+			# If there are no unexplored points in the map
 			if not all_unseen_pts:
 				self.get_logger().info("Map fully explored!")
 				return
 
+			# Setting goal location to the best possible point based on the robot's current location
 			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
 
 			path_pts = []
@@ -483,8 +487,8 @@ class SendPoints(Node):
 			except (IndexError, ValueError):
 				self.get_logger().info("Failed to create initial path")
 
+		# All previous goals done — add new ones dynamically
 		elif self.completed_all_goals():
-			# All previous goals done — add new ones dynamically
 			self.get_logger().info("All goals completed, generating new ones...")
 
 			all_unseen_pts = find_all_possible_goals(im_thresh)
