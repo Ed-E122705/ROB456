@@ -450,6 +450,8 @@ class SendPoints(Node):
 		robot_current_loc_in_image = self.from_map_to_image(map_msg=map_msg, pt_xy=robot_current_loc_in_map)
 		self.get_logger().info(f"Robot current location {robot_current_loc_in_map}")
 
+		# DOC: code edits made for map_callback
+		
 		if not self.goal_points:
 			# No goals yet — create initial set
 			self.get_logger().info("Creating New Goals...")
