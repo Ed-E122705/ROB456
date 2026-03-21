@@ -100,6 +100,9 @@ def is_reachable(im, pix):
     #  False otherwise
     # You can use four or eight connected - eight will return more points
     # YOUR CODE HERE
+
+    "DOC"
+
     unseen_neighbor_count = 0
     free_neighbor_count = 0
     free_neighbor_T_F = False
@@ -124,9 +127,10 @@ def find_all_possible_goals(im):
     # YOUR CODE HERE
 
     # Note: im is in (y, x) coordinates
-
+    "DOC"
+    
     free_pixles = {}
-    for i, row in enumerate(im):        # change to np.logical_and/np.logical_or
+    for i, row in enumerate(im):  
         for j, v in enumerate(row):
             if path_planning.is_free(im, (j, i)):   # check if pixel is free
                 reachable, unseen_neighbors, free_neighbors = is_reachable(im, (j, i))
@@ -143,15 +147,16 @@ def find_best_point(im, possible_points : dict, robot_loc):
     @param robot_loc - location of the robot (in case you want to factor that in)
     """
     # YOUR CODE HERE
+    "DOC"
 
-    # loop through possible_points, somehow compare distance from robot, set closest as goal
+    # loop through possible_points, compare distance from robot, set closest as goal
     current_best_distance = np.inf  # best distance to keep track of best option
     current_best_option = None      # Store current best option, update when a better one is found
 
     if len(possible_points) >= 1:    # End condition. Only path if there is an unseen point to go to
         for coord in possible_points.keys():
             if possible_points[coord][1] > 3:   # if number of free neighbors > 3
-                distance = np.sqrt((robot_loc[0] - coord[0])**2 + (robot_loc[1] - coord[1])**2) # linear distance calculation(currently ignores walls)
+                distance = np.sqrt((robot_loc[0] - coord[0])**2 + (robot_loc[1] - coord[1])**2)     # linear distance calculation(currently ignores walls)
                 if distance < current_best_distance:
                     current_best_distance = distance
                     current_best_option = coord
@@ -171,6 +176,10 @@ def find_waypoints(im, path):
     # Check if each point is in a straight line from the previous stored point
     # If it is not, store the unique point
     # If it is, don't store it
+    
+    "DOC"
+    """ Utilizes vectors to determine the direction between points, 
+    if the vectors have the same direction, don't record the point"""
 
     def vectorize(a, b):
         """ Convert tuples into a unit vector"""
@@ -187,7 +196,7 @@ def find_waypoints(im, path):
         new_unit_vector = vectorize(path[i], waypoints[-1])
         
         # u dot v = cos(θ). 
-        # So if θ=0 => cos(0) = 1. 
+        # So, if θ=0 => cos(0) = 1. 
         # Use 0.99 instead of 1 to account for rounding errors
         if np.dot(previous_unit_vector, new_unit_vector) < 0.99:   
             waypoints.append(path[i])
