@@ -453,23 +453,28 @@ class SendPoints(Node):
 		if not self.goal_points:
 			# No goals yet — create initial set
 			self.get_logger().info("Creating New Goals...")
-			all_unseen_pts = find_all_possible_goals(im_thresh)
-			
+			all_unseen_pts = find_all_possible_goals(im_thresh) #finds any unsen points
+
+			#if no unseen points, map is fully explored
 			if not all_unseen_pts:
 				self.get_logger().info("Map fully explored!")
 				return
 
-			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
+			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image) #finds next best point
 
 			path_pts = []
 			try:
+				#plan path using dijkstra's algorithm
 				path = dijkstra(im_thresh, robot_current_loc_in_image, goal_loc_in_image)
+				#reduce path to waypoints
 				path_waypoints = find_waypoints(im_thresh, path)
+				#convert from image to map coordinates
 				for p in path_waypoints:
 					map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
 					path_pts.append(map_xy)
 				self._set_path_markers(path_pts, 1)
 
+				#store goal points
 				if path_pts:
 					self.get_logger().info(f"Adding initial goals: {path_pts}")
 					self.replace_goal_points(path_pts, skip_current=False)
@@ -481,22 +486,28 @@ class SendPoints(Node):
 			# All previous goals done — add new ones dynamically
 			self.get_logger().info("All goals completed, generating new ones...")
 
-			all_unseen_pts = find_all_possible_goals(im_thresh)
+			all_unseen_pts = find_all_possible_goals(im_thresh) #finds any unseen points
+			
+			#if no unseen points, map is fully explored
 			if not all_unseen_pts:
 				self.get_logger().info("Map fully explored!")
 				return
 
-			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
+			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image) #finds next best point
 
 			path_pts = []
 			try:
+				#plan path using dijkstra's algorithm
 				path = dijkstra(im_thresh, robot_current_loc_in_image, goal_loc_in_image)
+				#reduce path to waypoints
 				path_waypoints = find_waypoints(im_thresh, path)
+				#convert from image to map coordinates
 				for p in path_waypoints:
 					map_xy = self.from_image_to_map(map_msg=map_msg, pt_uv=p)
 					path_pts.append(map_xy)
 				self._set_path_markers(path_pts, 1)
 
+				#append new goal points
 				if path_pts:
 					self.get_logger().info(f"Appending new goals: {path_pts}")
 					self.add_more_goal_points(path_pts)
