@@ -455,14 +455,13 @@ class SendPoints(Node):
 		if not self.goal_points:
 			# No goals yet — create initial set
 			self.get_logger().info("Creating New Goals...")
-			all_unseen_pts = find_all_possible_goals(im_thresh) #finds any unsen points
-
-			#if no unseen points, map is fully explored
+			all_unseen_pts = find_all_possible_goals(im_thresh)
+			
 			if not all_unseen_pts:
 				self.get_logger().info("Map fully explored!")
 				return
 
-			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image) #finds next best point
+			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
 
 			path_pts = []
 			try:
@@ -488,14 +487,12 @@ class SendPoints(Node):
 			# All previous goals done — add new ones dynamically
 			self.get_logger().info("All goals completed, generating new ones...")
 
-			all_unseen_pts = find_all_possible_goals(im_thresh) #finds any unseen points
-			
-			#if no unseen points, map is fully explored
+			all_unseen_pts = find_all_possible_goals(im_thresh)
 			if not all_unseen_pts:
 				self.get_logger().info("Map fully explored!")
 				return
 
-			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image) #finds next best point
+			goal_loc_in_image = find_best_point(im_thresh, all_unseen_pts, robot_current_loc_in_image)
 
 			path_pts = []
 			try:
