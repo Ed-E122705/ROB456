@@ -195,13 +195,22 @@ class Lab3Driver(Node):
 		return CancelResponse.ACCEPT
 	
 	def close_enough(self):
-		""" Return true if close enough to goal. This will be used in action_callback to stop moving toward the goal
-		@ return true/false """
+		"""
+		DOC
+		Return true if the robot is close enough to the goal. 
+		
+		This function computes the current distance to the target and compares it
+		against a pre-defined threshold. It also updates the closest distance 
+		recorded so far, which can be useful for stuck detection. This was going to be 
+		used in the action_callback to determine when to stop moving toward the goal...
+		
+		@return True if the robot is within the acceptable threshold distance, False otherwise.
+		"""
 
-  # YOUR CODE HERE
+  		# YOUR CODE HERE
 		target_distance = self.distance_to_target()
 
-		# Track the closest we've gotten to this goal — useful for stuck detection
+		# Track the closest we've gotten to this goal, useful for stuck detection
 		if target_distance < self.best_distance_so_far:
 			self.best_distance_so_far = target_distance
 
